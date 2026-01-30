@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aarogya Rakshak | Intelligent Diagnostic OS</title>
+    
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons: Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a', 
+                        },
+                        medical: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6', // Bright Royal Blue
+                            600: '#2563eb', 
+                            900: '#1e3a8a',
+                        },
+                        accent: {
+                            500: '#6366f1', // Indigo
+                            600: '#4f46e5',
+                        }
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #e2e8f0 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px)",
+                        'cta-gradient': "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)",
+                    },
+                    backgroundSize: {
+                        'grid-size': '40px 40px',
+                    },
+                    boxShadow: {
+                        'sharp': '4px 4px 0 0 #0f172a',
+                        'sharp-hover': '2px 2px 0 0 #0f172a',
+                        'sharp-lg': '8px 8px 0 0 #cbd5e1',
+                    },
+                    animation: {
+                        'scan-line': 'scan 2.5s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* Hide scrollbar for gallery but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 1. SCROLL REVEAL ANIMATION */
+        .reveal-node {
+            opacity: 0;
+            transform: translateY(60px) scale(0.95);
+            transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+        .reveal-node.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* 2. DASHBOARD 3D TILT */
+        .tilt-card {
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-3d;
+        }
+
+        /* 3. PARALLAX CLASSES */
+        .parallax-wrapper {
+            overflow: visible;
+            position: relative;
+        }
+        .parallax-img-container {
+            overflow: hidden;
+        }
+        .parallax-img {
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+            transform: scale(1.3);
+        }
+        
+        .parallax-badge {
+            will-change: transform;
+            z-index: 20;
+        }
+        
+        .parallax-bg-section {
+            position: relative;
+            overflow: hidden;
+        }
+        .parallax-bg-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 120%; /* Taller than container */
+            object-fit: cover;
+            will-change: transform;
+            opacity: 0.1;
+            z-index: 0;
+        }
+
+        /* 4. UTILITY ANIMATIONS */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(2deg); }
+        }
+        .animate-float-slow {
+            animation: float-slow 8s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .animate-scan {
+            animation: scan 3s linear infinite;
+        }
+        
+        /* 6. VERTICAL PARALLAX GRID */
+        .gallery-col {
+            will-change: transform;
+        }
+
+        /* Grab Cursor for Scroll Area */
+        .cursor-grab {
+            cursor: grab;
+        }
+        .cursor-grabbing {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="bg-white text-slate-900 overflow-x-hidden selection:bg-medical-100 selection:text-medical-900 relative">
+
+    <!-- LAYER 0: FIXED BACKGROUND GRID -->
+    <div class="fixed inset-0 z-0 opacity-40 pointer-events-none bg-grid-pattern bg-grid-size parallax-layer" data-speed="0.05"></div>
+
+    <!-- LAYER 1: DEEP BACKGROUND PARTICLES (Slow) -->
+    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <!-- Blobs -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-medical-500/5 rounded-full blur-3xl parallax-layer" data-speed="-0.05"></div>
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent-500/5 rounded-full blur-3xl parallax-layer" data-speed="-0.08"></div>
+        <div class="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-green-500/5 rounded-full blur-3xl parallax-layer" data-speed="0.02"></div>
+    </div>
+
+    <!-- 1. STICKY TOP NAVBAR -->
+    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center gap-2.5">
+                    <div class="bg-slate-900 text-white p-1.5 rounded shadow-sharp border border-slate-900 group cursor-pointer hover:bg-slate-800 transition-colors">
+                        <i data-lucide="plus-square" class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300"></i>
+                    </div>
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900">Aarogya Rakshak</span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-10 text-sm font-bold text-slate-500">
+                    <a href="#platform" class="hover:text-medical-600 transition-colors">Platform</a>
+                    <a href="#solutions" class="hover:text-medical-600 transition-colors">Solutions</a>
+                    <a href="#scans" class="hover:text-medical-600 transition-colors">Live Feed</a>
+                    <a href="#impact" class="hover:text-medical-600 transition-colors">Impact</a>
+                </div>
+
+                <!-- CTA -->
+                <div class="flex items-center gap-4">
+                    <a href="#" class="hidden md:block text-sm font-bold text-slate-500 hover:text-medical-600">Login</a>
+                    <a href="#" class="bg-medical-600 hover:bg-medical-500 text-white text-sm font-bold px-6 py-2.5 rounded-lg transition-all shadow-sharp hover:translate-y-0.5 hover:shadow-sharp-hover border-2 border-slate-900">
+                        Get Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 2. HERO SECTION -->
+    <section class="relative pt-36 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            
+            <div class="text-center max-w-4xl mx-auto mb-20">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wide mb-8 reveal-node shadow-sm hover:shadow-md transition-shadow cursor-default bg-white/80 backdrop-blur-sm">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Live in 120+ Indian Hospitals
+                </div>
+
+                <!-- Personalized Headline -->
+                <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-8 reveal-node leading-[1.1] transition-delay-100">
+                    The Operating System for <br class="hidden md:block" />
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-medical-600 to-accent-600">Precision Medicine</span>
+                </h1>
+
+                <!-- Personalized Subtext -->
+                <p class="text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto mb-10 reveal-node transition-delay-200 leading-relaxed font-medium">
+                    Detect pathologies in seconds. From rural clinics to multi-specialty hospitals, Aarogya Rakshak standardizes diagnostic excellence.
+                </p>
+
+                <!-- CTAs -->
+                <div class="flex flex-col sm:flex-row justify-center gap-5 reveal-node transition-delay-300">
+                    <button class="px-8 py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-sharp hover:translate-y-1 hover:shadow-sharp-hover border-2 border-slate-900 flex items-center justify-center gap-3 group">
+                        Let's Go <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    <button class="px-8 py-4 bg-white text-slate-900 rounded-xl font-bold border-2 border-slate-200 hover:border-slate-400 hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
+                        <i data-lucide="play-circle" class="w-5 h-5 text-slate-500"></i> Demo Video
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3D PARALLAX DASHBOARD -->
+            <div id="hero-dashboard" class="relative max-w-6xl mx-auto reveal-node perspective-1000 transition-delay-500">
+                
+                <!-- Floating Elements (Parallax) -->
+                <div class="absolute -top-12 left-0 z-20 hidden md:block parallax-badge" data-parallax-speed="0.08">
+                    <div class="bg-white border-2 border-slate-900 shadow-sharp p-4 rounded-xl flex items-center gap-3 animate-float">
+                        <div class="bg-green-100 p-2 rounded-lg text-green-700"><i data-lucide="brain" class="w-6 h-6"></i></div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 uppercase">Analysis</div>
+                            <div class="font-bold text-slate-900">Brain Tumor Detected</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute -bottom-8 right-10 z-20 hidden md:block parallax-badge" data-parallax-speed="0.12">
+                    <div class="bg-white border-2 border-slate-900 shadow-sharp p-4 rounded-xl flex items-center gap-3 animate-float-slow">
+                        <div class="bg-accent-100 p-2 rounded-lg text-accent-700"><i data-lucide="activity" class="w-6 h-6"></i></div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 uppercase">Vitals</div>
+                            <div class="font-bold text-slate-900">Arrhythmia Alert</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Interface -->
+                <div class="bg-slate-900 rounded-2xl border-4 border-slate-900 shadow-sharp-lg overflow-hidden tilt-card transform transition-transform">
+                    <!-- Browser Bar -->
+                    <div class="px-6 py-4 bg-slate-800 flex items-center gap-4">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div class="flex-1 bg-slate-900 rounded-md py-1.5 px-4 text-center text-xs font-mono text-slate-500">
+                            aarogya-rakshak.platform/dashboard/patient-992
+                        </div>
+                    </div>
+
+                    <!-- App Content -->
+                    <div class="bg-slate-50 p-6 md:p-8 grid lg:grid-cols-3 gap-8">
+                        
+                        <!-- Col 1: Patient Data -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-2xl font-bold text-slate-900">Patient Analysis</h3>
+                                    <p class="text-slate-500 font-medium">ID: #AR-2024-X44 • Male, 45Y</p>
+                                </div>
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span> Ready for Review
+                                </span>
+                            </div>
+
+                            <!-- Scan Viewer with REAL Image -->
+                            <div class="relative h-72 bg-slate-900 rounded-xl overflow-hidden border-2 border-slate-200 group shadow-inner">
+                                <!-- MRI Image -->
+                                <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&q=80&w=1200" 
+                                     alt="Brain MRI Scan" 
+                                     class="opacity-80 w-full h-full object-cover mix-blend-overlay">
+                                
+                                <!-- Overlay Grids -->
+                                <div class="absolute inset-0 bg-[linear-gradient(0deg,transparent_24%,rgba(59,130,246,.1)_25%,rgba(59,130,246,.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,.1)_75%,rgba(59,130,246,.1)_76%,transparent_77%,transparent),linear-gradient(90deg,transparent_24%,rgba(59,130,246,.1)_25%,rgba(59,130,246,.1)_26%,transparent_27%,transparent_74%,rgba(59,130,246,.1)_75%,rgba(59,130,246,.1)_76%,transparent_77%,transparent)] bg-[length:30px_30px] z-10 pointer-events-none"></div>
+                                
+                                <!-- Animated Scanning Beam -->
+                                <div class="absolute w-full h-1 bg-medical-500/80 shadow-[0_0_20px_rgba(59,130,246,1)] animate-scan z-20"></div>
+
+                                <!-- UI Overlays -->
+                                <div class="absolute top-4 right-4 z-20 flex flex-col gap-2">
+                                     <div class="bg-black/50 backdrop-blur text-white text-[10px] px-2 py-1 rounded border border-white/20 font-mono">Zoom: 120%</div>
+                                     <div class="bg-black/50 backdrop-blur text-white text-[10px] px-2 py-1 rounded border border-white/20 font-mono">Contrast: +15</div>
+                                </div>
+
+                                <div class="absolute bottom-4 left-4 z-20">
+                                    <div class="text-xs text-medical-200 font-mono bg-black/60 px-2 py-1 rounded">Series: T2_FLAIR_AXIAL</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: AI Findings -->
+                        <div class="bg-white rounded-xl border-2 border-slate-200 p-5 shadow-sm">
+                            <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-accent-500"></i> AI Findings
+                            </h4>
+                            
+                            <div class="space-y-4">
+                                <!-- Finding 1 -->
+                                <div class="p-3 bg-red-50 rounded-lg border border-red-100 hover:bg-red-100 transition-colors cursor-pointer">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-bold text-slate-800 text-sm">Mass Effect</span>
+                                        <span class="text-xs font-bold text-red-600 bg-white px-1.5 py-0.5 rounded border border-red-100">98%</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-snug">Detected localized displacement in the left temporal lobe.</p>
+                                </div>
+
+                                <!-- Finding 2 -->
+                                <div class="p-3 bg-amber-50 rounded-lg border border-amber-100 hover:bg-amber-100 transition-colors cursor-pointer">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-bold text-slate-800 text-sm">Edema</span>
+                                        <span class="text-xs font-bold text-amber-600 bg-white px-1.5 py-0.5 rounded border border-amber-100">76%</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-snug">Mild swelling indicating potential inflammatory response.</p>
+                                </div>
+                                
+                                <div class="h-px bg-slate-100 my-2"></div>
+
+                                <button class="w-full py-2.5 mt-2 text-sm font-bold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-medical-600 hover:border-medical-200 transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i> Generate Full Report
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. INTERACTIVE SCROLLABLE FEED (UPDATED: Light Mode + Mouse/Arrow Control) -->
+    <section id="scans" class="py-24 bg-white border-t border-slate-200 relative">
+        <div class="max-w-7xl mx-auto px-4 mb-8 flex justify-between items-end relative z-10">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-900 mb-2">Live Analysis Feed</h2>
+                <p class="text-slate-500 font-medium">Processing scans from partner hospitals in real-time.</p>
+            </div>
+            
+            <!-- Navigation Arrows -->
+            <div class="flex gap-2">
+                <button id="scrollLeftBtn" class="w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all shadow-sharp active:translate-y-0.5 active:shadow-none bg-white z-20">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </button>
+                <button id="scrollRightBtn" class="w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white transition-all shadow-sharp active:translate-y-0.5 active:shadow-none bg-white z-20">
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Container -->
+        <div id="feed-container" class="flex gap-8 px-8 pb-12 overflow-x-auto no-scrollbar cursor-grab snap-x snap-mandatory">
+            
+            <!-- Scan Card 1: Lungs (Recursia Style: White, Bold Border) -->
+            <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">CT_CHEST</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-001</span>
+                        <span class="text-xs bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded font-bold">Normal</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Pulmonary Analysis</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 1.2s</p>
+                </div>
+            </div>
+
+            <!-- Scan Card 2: Dental (Updated Image) -->
+            <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">OPG_DENTAL</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-002</span>
+                        <span class="text-xs bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded font-bold animate-pulse">Caries Detected</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Oral Screening</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 0.8s</p>
+                </div>
+            </div>
+
+             <!-- Scan Card 3: Brain -->
+             <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">MRI_BRAIN</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-003</span>
+                        <span class="text-xs bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded font-bold">Review Needed</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Neurology Dept.</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 2.1s</p>
+                </div>
+            </div>
+
+            <!-- Scan Card 4: Micro -->
+            <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1579165466741-7f35a4755657?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">MICROSCOPY</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-004</span>
+                        <span class="text-xs bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded font-bold">Benign</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Tissue Biopsy</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 1.5s</p>
+                </div>
+            </div>
+
+            <!-- Scan Card 5: XRay -->
+            <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">XRAY_HAND</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-005</span>
+                        <span class="text-xs bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded font-bold">Fracture</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Trauma Center</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 0.5s</p>
+                </div>
+            </div>
+             <!-- Scan Card 6: Eye -->
+             <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">FUNDUS</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-006</span>
+                        <span class="text-xs bg-green-100 text-green-700 border border-green-200 px-2 py-0.5 rounded font-bold">Normal</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Retina Scan</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 1.1s</p>
+                </div>
+            </div>
+             <!-- Scan Card 7: Skin (Updated Image) -->
+             <div class="min-w-[320px] bg-white rounded-xl border-2 border-slate-900 overflow-hidden flex-shrink-0 group shadow-sharp hover:shadow-sharp-lg transition-all duration-300 snap-center select-none">
+                <div class="h-48 relative border-b-2 border-slate-900">
+                    <img src="https://images.unsplash.com/photo-1618331835717-801e976710b2?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute bottom-3 left-3 bg-slate-900 text-white px-2 py-1 rounded-md text-[10px] font-bold font-mono border border-white/20">DERMA_SCOPE</div>
+                </div>
+                <div class="p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">#IMG-007</span>
+                        <span class="text-xs bg-amber-100 text-amber-700 border border-amber-200 px-2 py-0.5 rounded font-bold">Analysis Needed</span>
+                    </div>
+                    <div class="text-lg text-slate-900 font-bold mb-1">Dermatology</div>
+                    <p class="text-xs text-slate-500 font-medium">Processing Time: 1.0s</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 4. SOLUTIONS SECTION (Multi-Layer Parallax) -->
+    <section id="solutions" class="py-32 bg-slate-50 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-24 reveal-node">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-6 tracking-tight">Built for the Indian Medical Ecosystem</h2>
+                <p class="text-slate-500 text-xl font-medium">We understand the challenges of high patient volume and limited resources. Our AI scales with you.</p>
+            </div>
+
+            <!-- Feature Block 1: Offline First -->
+            <div class="flex flex-col md:flex-row items-center gap-12 mb-32 group">
+                <!-- Image with Floating Badge Overlay -->
+                <div class="w-full md:w-1/2 reveal-node parallax-wrapper">
+                    <div class="relative rounded-2xl overflow-hidden border-2 border-slate-900 shadow-sharp hover:shadow-sharp-lg transition-all duration-500 h-[400px]">
+                        <div class="parallax-img-container h-full w-full">
+                            <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800" 
+                                 alt="Doctor in rural area using tablet" 
+                                 class="w-full h-full object-cover parallax-img" data-parallax-speed="-0.1">
+                        </div>
+                    </div>
+                    <!-- Floating Badge (Moves faster than image for depth) -->
+                    <div class="absolute -bottom-6 -right-6 bg-white border border-slate-200 shadow-lg p-4 rounded-xl max-w-[200px] parallax-badge" data-parallax-speed="0.15">
+                        <div class="flex items-center gap-2 mb-2">
+                             <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                             <span class="text-xs font-bold text-slate-500 uppercase">Connectivity</span>
+                        </div>
+                        <div class="text-sm font-bold text-slate-900">Offline Mode Active</div>
+                        <div class="text-xs text-slate-500 mt-1">Caching 400 scans locally...</div>
+                    </div>
+                </div>
+                
+                <!-- Content -->
+                <div class="w-full md:w-1/2 reveal-node" style="transition-delay: 100ms;">
+                    <div class="w-14 h-14 bg-white border-2 border-slate-900 rounded-xl flex items-center justify-center text-medical-600 mb-6 shadow-sharp">
+                        <i data-lucide="database" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Offline-First Architecture</h3>
+                    <p class="text-slate-600 text-lg leading-relaxed mb-6">
+                        Operate seamlessly in low-connectivity rural centers. Our edge-computing nodes cache patient data locally and sync securely when internet connectivity is restored.
+                    </p>
+                    <ul class="space-y-3 text-slate-500 font-medium">
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-5 h-5 text-green-500"></i> Local caching mechanism</li>
+                        <li class="flex items-center gap-2"><i data-lucide="check" class="w-5 h-5 text-green-500"></i> Background sync logic</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Feature Block 2: Multi-Modal -->
+            <div class="flex flex-col md:flex-row-reverse items-center gap-12 mb-32 group">
+                <!-- Image with Floating Badge Overlay -->
+                <div class="w-full md:w-1/2 reveal-node parallax-wrapper">
+                    <div class="relative rounded-2xl overflow-hidden border-2 border-slate-900 shadow-sharp hover:shadow-sharp-lg transition-all duration-500 h-[400px]">
+                         <div class="parallax-img-container h-full w-full">
+                            <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800" 
+                                 alt="Eye Scan Technology" 
+                                 class="w-full h-full object-cover parallax-img" data-parallax-speed="0.1">
+                        </div>
+                    </div>
+                    <!-- Floating Badge -->
+                    <div class="absolute top-10 -left-10 bg-white border border-slate-200 shadow-lg p-4 rounded-xl parallax-badge" data-parallax-speed="0.2">
+                        <div class="flex items-center gap-3">
+                             <div class="bg-accent-100 p-2 rounded-lg text-accent-600"><i data-lucide="eye" class="w-6 h-6"></i></div>
+                             <div>
+                                 <div class="text-xs font-bold text-slate-500 uppercase">Analysis</div>
+                                 <div class="text-sm font-bold text-slate-900">Diabetic Retinopathy</div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="w-full md:w-1/2 reveal-node" style="transition-delay: 100ms;">
+                    <div class="w-14 h-14 bg-white border-2 border-slate-900 rounded-xl flex items-center justify-center text-accent-600 mb-6 shadow-sharp">
+                        <i data-lucide="scan-face" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Multi-Modal Screening</h3>
+                    <p class="text-slate-600 text-lg leading-relaxed mb-6">
+                        One platform for Tuberculosis (Chest X-Ray), Oral Cancer (Imaging), and Diabetic Retinopathy (Fundus) screening.
+                    </p>
+                    <a href="#" class="inline-flex items-center text-accent-600 font-bold hover:gap-2 transition-all">
+                        Explore Supported Modalities <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature Block 3: PACS Integration -->
+            <div class="flex flex-col md:flex-row items-center gap-12 group">
+                 <!-- Image with Floating Badge Overlay -->
+                 <div class="w-full md:w-1/2 reveal-node parallax-wrapper">
+                    <div class="relative rounded-2xl overflow-hidden border-2 border-slate-900 shadow-sharp hover:shadow-sharp-lg transition-all duration-500 h-[400px]">
+                        <!-- Parallax Image Container -->
+                         <div class="parallax-img-container h-full w-full">
+                            <img src="https://images.unsplash.com/photo-1558494949-ef526b01201b?auto=format&fit=crop&q=80&w=800" 
+                                 alt="Hospital Server Room" 
+                                 class="w-full h-full object-cover parallax-img" data-parallax-speed="-0.05">
+                        </div>
+                    </div>
+                     <!-- Floating Badge -->
+                     <div class="absolute -bottom-5 -left-5 bg-slate-900 text-white shadow-xl p-4 rounded-xl parallax-badge" data-parallax-speed="0.12">
+                        <div class="flex items-center gap-3">
+                             <i data-lucide="server" class="w-5 h-5 text-green-400"></i>
+                             <div>
+                                 <div class="text-xs font-mono text-slate-400">SERVER STATUS</div>
+                                 <div class="text-sm font-bold">DICOM Node: Active</div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Content -->
+                <div class="w-full md:w-1/2 reveal-node" style="transition-delay: 100ms;">
+                    <div class="w-14 h-14 bg-white border-2 border-slate-900 rounded-xl flex items-center justify-center text-green-600 mb-6 shadow-sharp">
+                        <i data-lucide="network" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Seamless PACS Integration</h3>
+                    <p class="text-slate-600 text-lg leading-relaxed mb-6">
+                        Plug-and-play with existing hospital systems (GE, Siemens, Phillips). No workflow disruption for radiologists.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEW SECTION: PARALLAX GALLERY GRID (Height Increased for Impact) -->
+    <section id="gallery" class="py-24 bg-slate-50 border-t border-slate-200 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+            <div class="text-center mb-12 reveal-node">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4">Comprehensive Modality Support</h2>
+                <p class="text-slate-500 text-lg">From imaging centers to surgical theaters, we cover the full spectrum.</p>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-6 md:gap-8 h-[700px] overflow-hidden relative">
+                <!-- Overlay Gradients to hide chop off -->
+                <div class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-slate-50 to-transparent z-10"></div>
+                <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 to-transparent z-10"></div>
+
+                <!-- Column 1 (Moves Up) -->
+                <div class="gallery-col space-y-6 md:space-y-8" data-direction="-1" data-speed="0.1">
+                    <img src="https://images.unsplash.com/photo-1516549655169-df83a0674f66?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                    <img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                    <img src="https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                    <!-- Duplicate for loop illusion -->
+                    <img src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                </div>
+
+                <!-- Column 2 (Moves Down) -->
+                <div class="gallery-col space-y-6 md:space-y-8 -mt-32" data-direction="1" data-speed="0.15">
+                     <img src="https://images.unsplash.com/photo-1576091160550-217358c7e618?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                     <img src="https://images.unsplash.com/photo-1551601651-2a8555f1a136?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                     <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                     <!-- Duplicate -->
+                     <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                </div>
+
+                <!-- Column 3 (Moves Up) -->
+                <div class="gallery-col space-y-6 md:space-y-8" data-direction="-1" data-speed="0.08">
+                     <img src="https://images.unsplash.com/photo-1582719471384-894fbb16e074?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                     <img src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                     <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                     <!-- Duplicate -->
+                     <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&q=80&w=400" class="w-full rounded-2xl shadow-md border border-slate-200 object-cover h-64 md:h-96">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. IMPACT SECTION (Now with Parallax Background) -->
+    <section id="impact" class="py-32 parallax-bg-section border-t border-slate-200 relative">
+        <!-- Parallax Background Image -->
+        <img src="https://images.unsplash.com/photo-1576091160550-217358c7e618?auto=format&fit=crop&q=80&w=2000" 
+             alt="Medical Background" 
+             class="parallax-bg-img opacity-[0.05] grayscale mix-blend-multiply"
+             data-speed="0.08">
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 reveal-node">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2">Trusted by Clinical Leaders</h2>
+                    <p class="text-slate-500 font-medium">Powering 50,000+ daily diagnostics.</p>
+                </div>
+                <button class="text-medical-700 font-bold flex items-center gap-2 hover:gap-4 transition-all">
+                    Read Success Stories <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Review 1 -->
+                <div class="bg-white/80 backdrop-blur-sm p-8 rounded-xl border-2 border-slate-200 shadow-sm reveal-node hover:border-medical-500 transition-all hover:-translate-y-1">
+                    <div class="flex gap-1 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                    </div>
+                    <p class="text-slate-700 mb-8 font-medium leading-relaxed italic">"The offline capability is a game-changer for our rural screening camps in Maharashtra. We processed 400 X-rays in a single day with zero internet."</p>
+                    <div class="flex items-center gap-4 border-t border-slate-200 pt-6">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=100" alt="Dr. Rajesh" class="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover">
+                        <div>
+                            <div class="text-sm font-bold text-slate-900">Dr. Rajesh Gupta</div>
+                            <div class="text-xs text-slate-500">CMO, Rural Health Initiative</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="bg-white/80 backdrop-blur-sm p-8 rounded-xl border-2 border-slate-200 shadow-sm reveal-node hover:border-medical-500 transition-all hover:-translate-y-1" style="transition-delay: 100ms;">
+                    <div class="flex gap-1 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                    </div>
+                    <p class="text-slate-700 mb-8 font-medium leading-relaxed italic">"Aarogya Rakshak reduced our MRI reporting backlog by 60%. The pre-filled reports are accurate and require minimal editing."</p>
+                    <div class="flex items-center gap-4 border-t border-slate-200 pt-6">
+                        <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=100" alt="Dr. Anita" class="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover">
+                        <div>
+                            <div class="text-sm font-bold text-slate-900">Dr. Anita Menon</div>
+                            <div class="text-xs text-slate-500">Head Radiology, City Care</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="bg-white/80 backdrop-blur-sm p-8 rounded-xl border-2 border-slate-200 shadow-sm reveal-node hover:border-medical-500 transition-all hover:-translate-y-1" style="transition-delay: 200ms;">
+                    <div class="flex gap-1 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                        <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                    </div>
+                    <p class="text-slate-700 mb-8 font-medium leading-relaxed italic">"Security was our biggest concern. Their on-premise deployment option meant patient data never leaves our hospital server."</p>
+                    <div class="flex items-center gap-4 border-t border-slate-200 pt-6">
+                        <img src="https://images.unsplash.com/photo-1537368910025-bc005fbedc99?auto=format&fit=crop&q=80&w=100" alt="Vikram Kumar" class="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover">
+                        <div>
+                            <div class="text-sm font-bold text-slate-900">Vikram Kumar</div>
+                            <div class="text-xs text-slate-500">IT Director, Apex Hospitals</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. FINAL CTA (Gradient) -->
+    <section class="py-24 relative overflow-hidden bg-cta-gradient">
+        <!-- Abstract Shapes -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-900 opacity-20 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3"></div>
+
+        <div class="max-w-4xl mx-auto px-4 relative z-10 text-center text-white">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Modernize your diagnostics today.</h2>
+            <p class="text-indigo-100 text-xl mb-10 max-w-2xl mx-auto font-medium">
+                Join the network of forward-thinking hospitals using Aarogya Rakshak to save lives with faster, accurate diagnoses.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-6 items-center">
+                <button class="bg-white text-indigo-700 font-bold py-4 px-10 rounded-xl hover:bg-slate-50 hover:scale-105 transition-all shadow-lg flex items-center gap-2 group">
+                    Schedule Demo <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                </button>
+                <button class="bg-indigo-600/50 hover:bg-indigo-600 border border-indigo-400 text-white font-bold py-4 px-10 rounded-xl transition-all backdrop-blur-sm">
+                    View Pricing
+                </button>
+            </div>
+            <p class="mt-8 text-sm text-indigo-200 font-medium">Fully Compliant: HIPAA • GDPR • DISHA (India)</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-16 border-t border-slate-800 text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 grid md:grid-cols-4 gap-12">
+            <div class="col-span-1 md:col-span-2">
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="bg-white text-slate-900 p-1 rounded">
+                        <i data-lucide="plus-square" class="w-5 h-5"></i>
+                    </div>
+                    <span class="font-bold text-xl text-white">Aarogya Rakshak</span>
+                </div>
+                <p class="text-slate-400 mb-6 max-w-sm text-lg">Revolutionizing Indian Healthcare with next-generation AI diagnostics. Built for accuracy, speed, and trust.</p>
+                <div class="flex gap-4">
+                     <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors"><i data-lucide="twitter" class="w-5 h-5"></i></a>
+                     <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+                     <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition-colors"><i data-lucide="youtube" class="w-5 h-5"></i></a>
+                </div>
+            </div>
+            
+            <div>
+                <h4 class="text-white font-bold mb-6">Platform</h4>
+                <ul class="space-y-4 text-sm font-medium">
+                    <li><a href="#" class="hover:text-white transition-colors">Radiology AI</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Cardiology</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Pathology</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Security</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h4 class="text-white font-bold mb-6">Company</h4>
+                <ul class="space-y-4 text-sm font-medium">
+                    <li><a href="#" class="hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Contact Sales</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 mt-16 pt-8 border-t border-slate-800 text-center text-xs text-slate-600">
+            © 2024 Aarogya Rakshak Pvt Ltd. All rights reserved. Made in Bangalore.
+        </div>
+    </footer>
+
+    <!-- LOGIC SCRIPTS -->
+    <script>
+        // 1. Initialize Lucide Icons
+        lucide.createIcons();
+
+        // 2. Advanced Parallax Engine
+        const parallaxLayers = document.querySelectorAll('.parallax-layer');
+        const parallaxImages = document.querySelectorAll('.parallax-img');
+        const parallaxBadges = document.querySelectorAll('.parallax-badge');
+        const parallaxBgs = document.querySelectorAll('.parallax-bg-img');
+        const heroDashboard = document.getElementById('hero-dashboard');
+        // Removed automatic scroll logic for horizontal feed
+        const galleryCols = document.querySelectorAll('.gallery-col');
+        
+        function updateScrollEffects() {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            
+            if (window.innerWidth > 768) {
+                // A. Background Layers (Fixed items moving)
+                parallaxLayers.forEach(layer => {
+                    const speed = parseFloat(layer.getAttribute('data-speed'));
+                    // Use transform for performance
+                    layer.style.transform = `translate3d(0, ${scrollY * speed}px, 0)`;
+                });
+
+                // B. Hero Dashboard 3D Tilt
+                if (heroDashboard) {
+                    const maxScroll = 800;
+                    const progress = Math.min(scrollY / maxScroll, 1);
+                    const rotateX = 8 - (progress * 8); 
+                    const translateY = scrollY * -0.05;
+                    // heroDashboard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) translateY(${translateY}px)`;
+                }
+
+                // C. Image Container Parallax (Relative to viewport)
+                parallaxImages.forEach(img => {
+                    const rect = img.parentElement.getBoundingClientRect();
+                    if (rect.top < windowHeight && rect.bottom > 0) {
+                        const speed = parseFloat(img.getAttribute('data-parallax-speed')) || 0.1;
+                        const centerOffset = (windowHeight / 2) - (rect.top + rect.height / 2);
+                        const moveY = centerOffset * speed;
+                        img.style.transform = `scale(1.3) translateY(${moveY}px)`;
+                    }
+                });
+
+                // D. Floating Badges Parallax
+                parallaxBadges.forEach(badge => {
+                    const rect = badge.parentElement.getBoundingClientRect();
+                     if (rect.top < windowHeight && rect.bottom > 0) {
+                        const speed = parseFloat(badge.getAttribute('data-parallax-speed')) || 0.2;
+                        const centerOffset = (windowHeight / 2) - (rect.top + rect.height / 2);
+                        const moveY = centerOffset * speed;
+                        badge.style.transform = `translateY(${moveY}px)`;
+                     }
+                });
+
+                // E. Section Background Parallax
+                parallaxBgs.forEach(bg => {
+                    const container = bg.closest('.parallax-bg-section');
+                    const rect = container.getBoundingClientRect();
+                     if (rect.top < windowHeight && rect.bottom > 0) {
+                         const speed = parseFloat(bg.getAttribute('data-speed')) || 0.05;
+                         // Calculate offset relative to the container position
+                         const offset = (windowHeight - rect.top) * speed; 
+                         bg.style.transform = `translate3d(0, ${offset}px, 0)`;
+                     }
+                });
+
+                // G. Vertical Gallery Parallax
+                galleryCols.forEach(col => {
+                    const rect = col.parentElement.getBoundingClientRect();
+                    if (rect.top < windowHeight && rect.bottom > 0) {
+                        const speed = parseFloat(col.getAttribute('data-speed'));
+                        const direction = parseFloat(col.getAttribute('data-direction'));
+                        const centerOffset = (windowHeight / 2) - (rect.top + rect.height / 2);
+                        const moveY = centerOffset * speed * direction;
+                        col.style.transform = `translateY(${moveY}px)`;
+                    }
+                });
+            }
+            
+            requestAnimationFrame(updateScrollEffects);
+        }
+        
+        requestAnimationFrame(updateScrollEffects);
+
+        // 3. Scroll Reveal Engine (IntersectionObserver)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -80px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-node').forEach(el => {
+            observer.observe(el);
+        });
+
+        // 4. Navbar State
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('shadow-md');
+                navbar.classList.replace('bg-white/95', 'bg-white/98');
+            } else {
+                navbar.classList.remove('shadow-md');
+                navbar.classList.replace('bg-white/98', 'bg-white/95');
+            }
+        });
+
+        // 5. Horizontal Scroll Logic (Button + Mouse Drag)
+        const scrollContainer = document.getElementById('feed-container');
+        const scrollLeftBtn = document.getElementById('scrollLeftBtn');
+        const scrollRightBtn = document.getElementById('scrollRightBtn');
+        
+        // Button Click Scroll
+        if (scrollLeftBtn && scrollRightBtn && scrollContainer) {
+            scrollLeftBtn.addEventListener('click', () => {
+                scrollContainer.scrollBy({ left: -340, behavior: 'smooth' });
+            });
+            
+            scrollRightBtn.addEventListener('click', () => {
+                scrollContainer.scrollBy({ left: 340, behavior: 'smooth' });
+            });
+        }
+
+        // Mouse Drag to Scroll
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        scrollContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            scrollContainer.classList.add('cursor-grabbing');
+            scrollContainer.classList.remove('cursor-grab');
+            startX = e.pageX - scrollContainer.offsetLeft;
+            scrollLeft = scrollContainer.scrollLeft;
+        });
+
+        scrollContainer.addEventListener('mouseleave', () => {
+            isDown = false;
+            scrollContainer.classList.remove('cursor-grabbing');
+            scrollContainer.classList.add('cursor-grab');
+        });
+
+        scrollContainer.addEventListener('mouseup', () => {
+            isDown = false;
+            scrollContainer.classList.remove('cursor-grabbing');
+            scrollContainer.classList.add('cursor-grab');
+        });
+
+        scrollContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - scrollContainer.offsetLeft;
+            const walk = (x - startX) * 2; // Scroll-fast
+            scrollContainer.scrollLeft = scrollLeft - walk;
+        });
+
+    </script>
+</body>
+</html>
