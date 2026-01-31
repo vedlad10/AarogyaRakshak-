@@ -411,5 +411,32 @@
             });
         });
     </script>
+    <script>
+function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-login');
+
+    // Loading State
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Authenticating...`;
+    lucide.createIcons();
+    btn.disabled = true;
+
+    setTimeout(() => {
+        // Success UI
+        btn.classList.remove('bg-medical-600', 'hover:bg-medical-700');
+        btn.classList.add('bg-green-600', 'border-green-800');
+        btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> Success`;
+        lucide.createIcons();
+
+        // Redirect to dashboard
+        setTimeout(() => {
+            window.location.href = "dashboard.html";
+        }, 600);
+
+    }, 1200);
+}
+</script>
+
 </body>
 </html>
