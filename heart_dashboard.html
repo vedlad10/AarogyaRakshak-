@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Analysis | Aarogya Rakshak</title>
+    
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons: Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a', 
+                        },
+                        medical: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6', 
+                            600: '#2563eb', 
+                            900: '#1e3a8a',
+                        },
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                        },
+                        sky: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #cbd5e1 1px, transparent 1px), linear-gradient(to bottom, #cbd5e1 1px, transparent 1px)",
+                    },
+                    backgroundSize: {
+                        'grid-size': '40px 40px',
+                    },
+                    boxShadow: {
+                        'sharp': '4px 4px 0 0 #0f172a',
+                        'sharp-sm': '2px 2px 0 0 #0f172a',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth Entrance Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-card { opacity: 0; animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* Graph Bar Growth Animation */
+        @keyframes growUp {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+        .bar-grow { transform-origin: bottom; animation: growUp 1s ease-out forwards; transform: scaleY(0); }
+
+        /* ECG Line Animation */
+        .ecg-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawECG 3s linear infinite;
+        }
+        @keyframes drawECG {
+            0% { stroke-dashoffset: 1000; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        /* Pulse Animation for Live Status */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .live-indicator {
+            animation: pulse-ring 2s infinite;
+        }
+
+        /* Sidebar Active States */
+        .nav-item.active {
+            background-color: white;
+            border-color: #0f172a;
+            color: #0f172a;
+            box-shadow: 2px 2px 0 0 #0f172a;
+        }
+        .nav-item {
+            border: 2px solid transparent;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 h-screen w-screen overflow-hidden flex selection:bg-emerald-100 selection:text-emerald-900 font-medium">
+
+    <!-- 1. LEFT SIDEBAR -->
+    <aside class="w-64 bg-white border-r-2 border-slate-900 flex flex-col h-full shrink-0 z-20">
+        <div class="h-16 flex items-center px-6 border-b-2 border-slate-900">
+            <div class="flex items-center gap-2.5">
+                <div class="bg-slate-900 text-white p-1 rounded shadow-sm border border-slate-900">
+                    <i data-lucide="plus-square" class="w-4 h-4"></i>
+                </div>
+                <span class="font-extrabold text-lg tracking-tight text-slate-900">Aarogya Rakshak</span>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto py-6 px-3 space-y-8">
+            <div>
+                <h3 class="px-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-3">Core Modules</h3>
+                <nav class="space-y-1">
+                    <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors group border-2 border-transparent">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-slate-400 group-hover:text-emerald-600"></i>
+                        Main Dashboard
+                    </a>
+                    <button onclick="switchModule('cardiac')" id="nav-cardiac" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors group">
+                        <i data-lucide="heart-pulse" class="w-5 h-5 group-hover:text-emerald-600"></i>
+                        Cardiac Analysis
+                    </button>
+                    <button onclick="switchModule('pulmonary')" id="nav-pulmonary" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors group">
+                        <i data-lucide="wind" class="w-5 h-5 group-hover:text-sky-600"></i>
+                        Pulmonary Scan
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <div class="p-4 border-t-2 border-slate-900 bg-slate-50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-white border-2 border-slate-900 flex items-center justify-center font-bold text-slate-900">MD</div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-900 truncate">Dr. Pathologist</p>
+                    <p class="text-xs text-slate-500 truncate">Diagnostic Dept.</p>
+                </div>
+                <button class="text-slate-400 hover:text-slate-900"><i data-lucide="log-out" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-grid-pattern bg-grid-size relative">
+        <div class="absolute inset-0 bg-slate-50/90 z-0"></div>
+
+        <!-- TOP NAVBAR -->
+        <header class="h-16 bg-white border-b-2 border-slate-900 flex items-center justify-between px-6 z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <span class="px-3 py-1 bg-emerald-100 text-emerald-800 border-2 border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-2">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full live-indicator"></span> System Online
+                </span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100"><i data-lucide="search" class="w-4 h-4"></i></button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 relative">
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                    <span class="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTENT -->
+        <main class="flex-1 overflow-y-auto p-6 z-10">
+
+            <!-- ===================== MODULE 1: CARDIAC ===================== -->
+            <div id="module-cardiac" class="block animate-card">
+                <!-- HEADER -->
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-900">Cardiac Scan Analysis</h1>
+                        <p class="text-slate-500 font-medium mt-1">AI-assisted ECG & heart imaging diagnostics</p>
+                    </div>
+                    <button onclick="resetModule('cardiac')" class="px-4 py-2 border-2 border-slate-900 rounded-lg font-bold text-sm bg-white hover:bg-slate-50 flex items-center gap-2 shadow-sharp-sm active:translate-y-0.5 transition-all">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> New Session
+                    </button>
+                </div>
+
+                <!-- VIEW 1: UPLOAD -->
+                <div id="cardiac-upload-view" class="flex flex-col items-center justify-center py-12">
+                    <div class="bg-white border-2 border-slate-900 rounded-xl p-12 text-center max-w-xl w-full shadow-sharp-sm transition-all duration-300 hover:shadow-sharp">
+                        <div class="w-24 h-24 bg-emerald-50 border-2 border-dashed border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+                            <i data-lucide="heart-pulse" class="w-10 h-10 text-emerald-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mb-3">Upload Cardiac Data</h3>
+                        <p class="text-slate-500 mb-8 font-medium">Upload raw 12-lead ECG data (XML/PDF) or Echocardiogram imaging series.</p>
+                        
+                        <label class="block w-full cursor-pointer group">
+                            <input type="file" class="hidden" onchange="handleCardiacUpload(event)">
+                            <div class="upload-btn w-full py-4 bg-slate-900 text-white font-bold rounded-xl shadow-sharp hover:translate-y-[-2px] hover:shadow-sharp-sm transition-all flex items-center justify-center gap-3 group-hover:bg-slate-800">
+                                <i data-lucide="upload" class="w-5 h-5"></i> Select ECG / Echo File
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: RESULTS (Hidden) -->
+                <div id="cardiac-results-view" class="hidden">
+                    <div class="grid lg:grid-cols-3 gap-6 mb-6">
+                        <!-- Context -->
+                        <div class="bg-white border-2 border-slate-900 rounded-xl p-6 shadow-sharp-sm lg:col-span-1">
+                            <h3 class="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="file-input" class="w-4 h-4 text-emerald-600"></i> Input Source</h3>
+                            <div class="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-100 rounded-lg mb-4">
+                                <div class="w-10 h-10 rounded bg-white border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-xs">ECG</div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-bold text-slate-900 truncate" id="cardiac-filename">Patient_ECG.xml</p>
+                                    <p class="text-[10px] text-emerald-700 font-bold">Processed Successfully</p>
+                                </div>
+                                <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+                            </div>
+                            <div class="space-y-3 pt-2 border-t border-slate-100">
+                                <div class="flex justify-between text-xs font-medium text-slate-500"><span>Duration</span><span class="text-slate-900 font-bold">10 seconds</span></div>
+                                <div class="flex justify-between text-xs font-medium text-slate-500"><span>Sample Rate</span><span class="text-slate-900 font-bold">500 Hz</span></div>
+                            </div>
+                        </div>
+                        <!-- Vitals -->
+                        <div class="bg-white border-2 border-slate-900 rounded-xl p-6 shadow-sharp-sm lg:col-span-2">
+                            <h3 class="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="activity" class="w-4 h-4 text-rose-500"></i> Vitals Overview</h3>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="p-4 bg-rose-50 border border-rose-100 rounded-lg"><p class="text-xs font-bold text-rose-800 uppercase mb-1">Heart Rate</p><span class="text-4xl font-extrabold text-slate-900">72</span> <span class="text-xs font-bold text-slate-500">BPM</span></div>
+                                <div class="p-4 bg-blue-50 border border-blue-100 rounded-lg"><p class="text-xs font-bold text-blue-800 uppercase mb-1">Blood Pressure</p><span class="text-4xl font-extrabold text-slate-900">118/76</span></div>
+                                <div class="p-4 bg-cyan-50 border border-cyan-100 rounded-lg"><p class="text-xs font-bold text-cyan-800 uppercase mb-1">SpO2</p><span class="text-4xl font-extrabold text-slate-900">99</span> <span class="text-xs font-bold text-slate-500">%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Waveform -->
+                    <div class="bg-white border-2 border-slate-900 rounded-xl p-6 shadow-sharp-sm mb-6">
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i data-lucide="waves" class="w-4 h-4 text-emerald-600"></i> Lead II Rhythm Strip</h3></div>
+                        <div class="h-56 w-full bg-slate-900 rounded-lg border-2 border-slate-900 relative overflow-hidden flex items-center justify-center">
+                            <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px); background-size: 20px 20px;"></div>
+                            <svg viewBox="0 0 1200 200" class="w-full h-full relative z-10" preserveAspectRatio="none">
+                                <path d="M0,100 L50,100 L60,90 L70,110 L80,100 L100,100 L110,60 L120,150 L130,80 L140,100 L160,100 L170,95 L190,105 L200,100 L250,100 L260,90 L270,110 L280,100 L300,100 L310,60 L320,150 L330,80 L340,100 L360,100 L370,95 L390,105 L400,100 L450,100 L460,90 L470,110 L480,100 L500,100 L510,60 L520,150 L530,80 L540,100 L560,100 L570,95 L590,105 L600,100 L650,100 L660,90 L670,110 L680,100 L700,100 L710,60 L720,150 L730,80 L740,100 L760,100 L770,95 L790,105 L800,100 L850,100 L860,90 L870,110 L880,100 L900,100 L910,60 L920,150 L930,80 L940,100 L960,100 L970,95 L990,105 L1000,100 L1050,100 L1060,90 L1070,110 L1080,100 L1100,100 L1110,60 L1120,150 L1130,80 L1140,100 L1160,100 L1170,95 L1190,105 L1200,100" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" class="ecg-line"></path>
+                            </svg>
+                            <div class="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent to-emerald-500/20 border-r border-emerald-500/50 animate-[scan_4s_linear_infinite] left-0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== MODULE 2: PULMONARY ===================== -->
+            <div id="module-pulmonary" class="hidden animate-card">
+                <!-- HEADER -->
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 class="text-3xl font-extrabold text-slate-900">Pulmonary Scan Analysis</h1>
+                        <p class="text-slate-500 font-medium mt-1">AI-assisted Lung X-Ray & CT diagnostics</p>
+                    </div>
+                    <button onclick="resetModule('pulmonary')" class="px-4 py-2 border-2 border-slate-900 rounded-lg font-bold text-sm bg-white hover:bg-slate-50 flex items-center gap-2 shadow-sharp-sm active:translate-y-0.5 transition-all">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> New Session
+                    </button>
+                </div>
+
+                <!-- VIEW 1: UPLOAD -->
+                <div id="pulmonary-upload-view" class="flex flex-col items-center justify-center py-12">
+                    <div class="bg-white border-2 border-slate-900 rounded-xl p-12 text-center max-w-xl w-full shadow-sharp-sm transition-all duration-300 hover:shadow-sharp">
+                        <div class="w-24 h-24 bg-sky-50 border-2 border-dashed border-sky-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+                            <i data-lucide="wind" class="w-10 h-10 text-sky-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mb-3">Upload Chest Scan</h3>
+                        <p class="text-slate-500 mb-8 font-medium">Upload Chest X-Ray (CXR) or CT DICOM series.</p>
+                        
+                        <label class="block w-full cursor-pointer group">
+                            <input type="file" class="hidden" onchange="handlePulmonaryUpload(event)">
+                            <div class="upload-btn w-full py-4 bg-slate-900 text-white font-bold rounded-xl shadow-sharp hover:translate-y-[-2px] hover:shadow-sharp-sm transition-all flex items-center justify-center gap-3 group-hover:bg-slate-800">
+                                <i data-lucide="upload" class="w-5 h-5"></i> Select X-Ray / CT
+                            </div>
+                        </label>
+                        <div class="mt-8 flex justify-center gap-6 text-xs text-slate-400 font-bold border-t border-slate-100 pt-6">
+                            <span class="flex items-center gap-1"><i data-lucide="image" class="w-3 h-3"></i> DICOM</span>
+                            <span class="flex items-center gap-1"><i data-lucide="file-image" class="w-3 h-3"></i> PNG</span>
+                            <span class="flex items-center gap-1"><i data-lucide="file" class="w-3 h-3"></i> JPEG</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: RESULTS DASHBOARD (Hidden initially) -->
+                <div id="pulmonary-results-view" class="hidden">
+                    
+                    <div class="grid lg:grid-cols-3 gap-6">
+                        
+                        <!-- Col 1: Scan Viewer (Main) -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="bg-white border-2 border-slate-900 rounded-xl p-6 shadow-sharp-sm">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-bold text-sm text-slate-900 flex items-center gap-2"><i data-lucide="scan" class="w-4 h-4 text-sky-600"></i> Chest X-Ray Viewer</h3>
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-1 text-[10px] font-bold border border-slate-200 bg-slate-50 rounded">PA View</span>
+                                        <button class="px-2 py-1 text-[10px] font-bold border border-slate-900 rounded hover:bg-slate-50 shadow-sm" onclick="alert('Heatmap Toggled')">Toggle Heatmap</button>
+                                    </div>
+                                </div>
+                                <div class="relative aspect-[4/3] bg-slate-900 rounded-lg overflow-hidden group border-2 border-slate-900">
+                                    <img src="https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&q=80&w=1200" class="w-full h-full object-cover opacity-90">
+                                    <!-- Overlay Heatmap -->
+                                    <div class="absolute inset-0 opacity-40 mix-blend-overlay" style="background: radial-gradient(circle at 65% 45%, rgba(255, 0, 0, 0.8) 0%, transparent 20%), radial-gradient(circle at 35% 50%, rgba(255, 165, 0, 0.6) 0%, transparent 25%);"></div>
+                                    <!-- Grid Lines -->
+                                    <div class="absolute inset-0 pointer-events-none opacity-10" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 50px 50px;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Trends -->
+                            <div class="bg-white border-2 border-slate-900 rounded-xl p-6 shadow-sharp-sm">
+                                <h3 class="font-bold text-sm text-slate-900 mb-4">Opacity Intensity Zones</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-4 text-xs font-bold">
+                                        <span class="w-20 text-slate-500">Upper R</span>
+                                        <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-sky-500 h-full w-[20%]"></div></div>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-xs font-bold">
+                                        <span class="w-20 text-slate-500">Lower R</span>
+                                        <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-red-500 h-full w-[85%]"></div></div>
+                                    </div>
+                                    <div class="flex items-center gap-4 text-xs font-bold">
+                                        <span class="w-20 text-slate-500">Upper L</span>
+                                        <div class="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-sky-500 h-full w-[15%]"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Metrics -->
+                        <div class="space-y-6">
+                            <!-- Health Score -->
+                            <div class="bg-white border-2 border-slate-900 rounded-xl p-5 shadow-sharp-sm">
+                                <h3 class="font-bold text-sm text-slate-900 mb-4">Lung Health Score</h3>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="relative w-20 h-20 flex items-center justify-center">
+                                        <svg class="w-full h-full rotate-[-90deg]" viewBox="0 0 36 36">
+                                            <path class="text-slate-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                                            <path class="text-amber-500 donut-segment" stroke-dasharray="68, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                                        </svg>
+                                        <div class="absolute text-center">
+                                            <span class="block text-xl font-extrabold text-slate-900">68%</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right space-y-1">
+                                        <p class="text-xs text-slate-500">Risk Level</p>
+                                        <p class="text-lg font-bold text-amber-600">Moderate</p>
+                                        <p class="text-xs text-slate-500">Lesions: <span class="font-bold text-slate-900">2</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Disease Prob -->
+                            <div class="bg-white border-2 border-slate-900 rounded-xl p-5 shadow-sharp-sm">
+                                <h3 class="font-bold text-sm text-slate-900 mb-4">Disease Probability</h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-1"><span class="text-red-700">Pneumonia</span><span>78%</span></div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-red-500 h-full w-[78%]"></div></div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-1"><span class="text-amber-700">COVID-19</span><span>45%</span></div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-amber-500 h-full w-[45%]"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Findings -->
+                            <div class="bg-white border-2 border-slate-900 rounded-xl p-5 shadow-sharp-sm flex flex-col">
+                                <h3 class="font-bold text-sm text-slate-900 mb-4 flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-sky-600"></i> Findings</h3>
+                                <div class="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-xs mb-3">
+                                    <p class="font-bold text-red-900">Consolidation</p>
+                                    <p class="text-red-700 mt-1">Right lower lobe shows signs of consolidation.</p>
+                                </div>
+                                <button class="mt-4 w-full py-2 bg-slate-900 text-white font-bold rounded-lg text-xs hover:bg-slate-800 transition-colors">Generate Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        lucide.createIcons();
+
+        function switchModule(moduleName) {
+            // Hide all modules
+            document.getElementById('module-cardiac').classList.add('hidden');
+            document.getElementById('module-pulmonary').classList.add('hidden');
+            
+            // Remove active state from sidebar
+            document.getElementById('nav-cardiac').classList.remove('active');
+            document.getElementById('nav-pulmonary').classList.remove('active');
+
+            // Show selected module
+            document.getElementById('module-' + moduleName).classList.remove('hidden');
+            document.getElementById('nav-' + moduleName).classList.add('active');
+
+            // Reset animations
+            const container = document.getElementById('module-' + moduleName);
+            container.style.animation = 'none';
+            container.offsetHeight; /* trigger reflow */
+            container.style.animation = null; 
+        }
+
+        function resetModule(moduleName) {
+            document.getElementById(moduleName + '-results-view').classList.add('hidden');
+            document.getElementById(moduleName + '-upload-view').classList.remove('hidden');
+        }
+
+        function handleHeartUpload(event) {
+            processUpload(event, 'heart');
+        }
+
+        function handlePulmonaryUpload(event) {
+            processUpload(event, 'pulmonary'); // Changed 'lung' to 'pulmonary' to match ID logic below
+        }
+
+        function processUpload(event, type) {
+            const file = event.target.files[0];
+            if(file) {
+                const btn = event.target.parentElement.querySelector('.upload-btn');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="loader" class="w-5 h-5 animate-spin"></i> Analyzing...`;
+                
+                setTimeout(() => {
+                    // Correctly target IDs based on type: 'heart' -> 'heart-upload-view', 'pulmonary' -> 'pulmonary-upload-view'
+                    // For heart specific logic (filename update)
+                    if(type === 'heart') {
+                        document.getElementById('heart-filename').innerText = file.name;
+                    }
+
+                    document.getElementById(type + '-upload-view').classList.add('hidden');
+                    document.getElementById(type + '-results-view').classList.remove('hidden');
+                    
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
