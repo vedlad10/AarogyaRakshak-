@@ -385,11 +385,13 @@
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <p class="text-xs font-bold text-slate-400 uppercase">Detected Condition</p>
-                                    <h2 class="text-2xl font-extrabold text-red-600">Pneumonia (Viral)</h2>
+                                    <h2 id="prediction-text" class="text-2xl font-extrabold text-red-600">--</h2>
+>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-xs font-bold text-slate-400 uppercase">Confidence</p>
-                                    <p class="text-2xl font-extrabold text-slate-900">94.8%</p>
+                                    <p id="confidence-text" class="text-2xl font-extrabold text-slate-900">--%</p>
+
                                 </div>
                             </div>
                             <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden border border-slate-200">
@@ -508,18 +510,33 @@
     <!-- LOGIC SCRIPT -->
     <script>
         lucide.createIcons();
+async function handleLungUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
-        function handleLungUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+    // Show processing UI
+    document.getElementById('state-upload').classList.add('hidden');
+    document.getElementById('state-processing').classList.remove('hidden');
 
-            // 1. Transition to Processing State
-            document.getElementById('state-upload').classList.add('hidden');
-            document.getElementById('state-processing').classList.remove('hidden');
+    const formData = new FormData();
+    formData.append("file", file);
 
-            // 2. Simulate Processing
-            startProcessingSimulation(file.name);
-        }
+    try {
+        const response = await fetch("http://127.0.0.1:5000/predict", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+
+        showRealResults(file.name, data);
+
+    } catch (error) {
+        alert("Error connecting to backend");
+        console.error(error);
+    }
+}
+
 
         function startProcessingSimulation(filename) {
             let progress = 0;
@@ -569,14 +586,21 @@
             // icon.setAttribute('data-lucide', 'check'); // Would need re-init
         }
 
-        function showResults(filename) {
-            document.getElementById('state-processing').classList.add('hidden');
-            document.getElementById('state-results').classList.remove('hidden');
-            document.getElementById('res-filename').innerText = filename;
-            
-            // Render Heatmap Grid
-            renderHeatmapGrid();
-        }
+        function showRealResults(filename, data) {
+    document.getElementById('state-processing').classList.add('hidden');
+    document.getElementById('state-results').classList.remove('hidden');
+
+    document.getElementById('res-filename').innerText = filename;
+
+    // Update prediction
+    document.getElementById("prediction-text").innerText = data.prediction;
+
+    // Update confidence
+    document.getElementById("confidence-text").innerText = data.confidence + "%";
+
+    console.log("Prediction:", data);
+}
+
 
         function toggleOverlay() {
             const overlay = document.getElementById('result-overlay');
@@ -605,6 +629,10 @@
                 grid.appendChild(cell);
             }
         }
+        
+
+
+
     </script>
 </body>
-</html>
+</html> 
